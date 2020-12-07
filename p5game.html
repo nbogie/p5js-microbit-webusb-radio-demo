@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <meta charset="UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.1.9/lib/p5.js"></script>
+    <title>Micro:bit WebUSB Console</title>
+  </head>
+
+  <body>
+    <div class="container">
+      <div id="sketch-holder"></div>
+      <div class="box">
+        <div class="row header">
+          <button id="connect" class="button">Connect</button>
+        </div>
+        <div class="row header">
+          <button id="disconnect" class="button">Disconnect All</button>
+        </div>
+        <div class="row header">
+          <button id="send" class="button">Send "Test" to All</button>
+        </div>
+        <div class="row header">
+          <button id="clear" class="button">Clear Console</button>
+        </div>
+        <div class="row header">
+          <button id="toggleLogging" class="button">
+            Toggle Logging (currently <span id="logStatusSpan"></span>)
+          </button>
+        </div>
+
+        <div
+          id="console"
+          class="row content"
+          style="overflow: auto; border: 4px solid black; padding: 2%"
+        >
+          Waiting for connection.
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <!--  Include the webusb support library  -->
+  <script src="src/web/ubitwebusb.js"></script>
+
+  <script src="src/web/sketch.js"></script>
+
+  <script>
+    let isLoggingEnabled = true;
+    let recentMessages = [];
+
+    // Append a line to the console frame
+    function consolePrintln(message) {
+      if (isLoggingEnabled) {
+        recentMessages.unshift(message);
+        if (recentMessages.length > 20) {
+          recentMessages = recentMessages.slice(0, 20);
+        }
+      }
+      var con = document.getElementById("console");
+      con.innerHTML = recentMessages.map((m) => "<br/>" + m).join("\n");
+      con.scrollTop = con.scrollHeight;
+    }
+
+    // List of connected devices (a single value could be used if only connecting to one device)
+
+    // Make the "go" button open the request devices box
+    document
+      .getElementById("connect")
+      .addEventListener("click", () => uBitConnectDevice(uBitEventHandler));
+    document
+      .getElementById("disconnect")
+      .addEventListener("click", () =>
+        connectedDevices.forEach((d) => uBitDisconnect(d))
+      );
+    document.getElementById("clear").addEventListener("click", () => {
+      document.getElementById("console").innerHTML = "";
+    });
+    document.getElementById("send").addEventListener("click", () => {
+      connectedDevices.forEach((d) => uBitSend(d, "Test"));
+    });
+    document.getElementById("toggleLogging").addEventListener("click", () => {
+      console.log("toggling logging");
+      isLoggingEnabled = !isLoggingEnabled;
+      document.getElementById("logStatusSpan").innerText = isLoggingEnabled;
+    });
+  </script>
+</html>
